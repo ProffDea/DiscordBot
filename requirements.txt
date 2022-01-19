@@ -1,7 +1,7 @@
 aiohttp==3.7.4.post0
 async-timeout==3.0.1
 asyncpg==0.25.0
-attrs==21.2.0
+attrs==21.4.0
 chardet==4.0.0
 discord.py==1.7.3
 greenlet==1.1.2

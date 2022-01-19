@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine
 
-import bin.config as config
+import src.config as config
 
 # Weird style formatting?
 engine = create_async_engine("postgresql+asyncpg://%s:%s@%s:%s/%s" %
