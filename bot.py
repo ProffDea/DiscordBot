@@ -11,6 +11,8 @@ from discord.ext import commands
 import src.config as config
 import src.log as log
 
+if not os.path.exists("logs"):
+    os.mkdir("logs")
 log.start()
 
 def get_intents():
@@ -21,7 +23,7 @@ bot = commands.Bot(command_prefix=config.get("DEFAULT_PREFIX"),
                    descritpion=config.get("BOT_DESCRIPTION"),
                    case_insensitive=True,
                    intents=get_intents())
-bot.version = "1.0.0"
+bot.version = "1.2.1"
 
 modules = "cogs"
 for file in os.listdir(modules):
