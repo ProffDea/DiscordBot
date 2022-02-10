@@ -5,3 +5,6 @@ with open("config.yaml") as f:
 
 def get(var: str):
     return conf[var]
+
+def refresh():
+    pass
