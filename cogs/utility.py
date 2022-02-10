@@ -11,15 +11,5 @@ class Utility(commands.Cog, name="Utility"):
         lat = round(self.bot.latency * 1000)
         await ctx.send("%sms" % (lat))
 
-    @commands.command(name="Dir")
-    async def dire(self, ctx):
-        owner_id = config.get("BOT_OWNER")
-        nt = type(config.get("BOT_OWNER"))
-        if ctx.message.author.id == owner_id:
-            y = True
-        else:
-            y = False
-        await ctx.send("%s %s %s" % (owner_id, nt, y))
-
 def setup(bot):
     bot.add_cog(Utility(bot))
