@@ -1,18 +1,21 @@
-from discord.ext import commands
 import os
 import random
+from discord.ext import commands
+from discord import slash_command
 
 from src import config
 
+
 # Add cooldowns/coroutines
 # Add checks for dm messages
-class Webhook(commands.Cog, name="Webhooks"):
+class Webhook(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     # Checks current context for webhooks.
     # If no webhook matching config hook name, create new webhook.
     # Returns webhook object
+    @staticmethod
     async def grab(ctx):
         webhooks = await ctx.channel.webhooks()
         imgs = os.listdir("src/images/webhook")
@@ -21,7 +24,7 @@ class Webhook(commands.Cog, name="Webhooks"):
             av = None
         else:
             img = random.choice(imgs)
-            with open("src/images/webhook/%s" % (img), "rb") as f:
+            with open("src/images/webhook/%s" % img, "rb") as f:
                 av = f.read()
         webhook = None
         if webhooks:
@@ -30,13 +33,22 @@ class Webhook(commands.Cog, name="Webhooks"):
                     webhook = wh
                     break
         if not webhooks or not webhook:
-            webhook = await ctx.channel.create_webhook(name=config.get("HOOK_NAME"), avatar=av)
+            webhook = await ctx.channel.create_webhook(
+                name=config.get("HOOK_NAME"),
+                avatar=av
+            )
         return webhook
 
-    @commands.command(name="Talk")
+    @commands.command(name="talk", enabled=False)
     async def talk(self, ctx):
-        webhook = await Webhook.grab(ctx)
+        webhook = await self.grab(ctx)
         await webhook.send("Hello")
+
+    #@slash_command(guild_ids=[629814073877331989, 648977487744991233], name="talk")
+    async def slash_talk(self, ctx):
+        webhook = await self.grab(ctx)
+        await webhook.respond("Hello")
+
 
 def setup(bot):
     bot.add_cog(Webhook(bot))
