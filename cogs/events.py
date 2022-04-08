@@ -40,7 +40,7 @@ async def voice_role_module(
     if (
         before.channel and not after.channel or
         after.channel and member.guild.afk_channel and
-        after.channel.id == member.guild.afk_channel.id
+        after.channel == member.guild.afk_channel
     ):  # Leaving channel or joining afk channel
         if (
             after.channel and member.guild.afk_channel and
@@ -52,14 +52,18 @@ async def voice_role_module(
             await member.remove_roles(role)
     elif (
         not before.channel and after.channel or
-        before.channel and after.channel
+        before.channel and after.channel and
+        before.channel != after.channel
     ):  # Joining channel or moving between channels
         role_after = await get_voice_role(after.channel)
         if role_after and role_after not in member.roles:
             await member.add_roles(role_after)
         if before.channel and after.channel:
             role_before = await get_voice_role(before.channel)
-            if role_before and role_before in member.roles:
+            if (
+                    role_before and role_before != role_after
+                    and role_before in member.roles
+            ):
                 await member.remove_roles(role_before)
 
 
