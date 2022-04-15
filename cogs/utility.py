@@ -33,11 +33,6 @@ class Utility(commands.Cog):
         "Commands related to listing voice data."
     )
 
-    @slash_command(name="testpage")
-    async def test_page(self, ctx: discord.ApplicationContext):
-        paginator = pages.Paginator(pages=["hello", "world"])
-        await paginator.respond(ctx.interaction)
-
     @voice.command(name="roles")
     async def list_voice_roles(self, ctx: discord.ApplicationContext, page: int = 1):
         page = page - 1
