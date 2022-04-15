@@ -1,5 +1,6 @@
 import os
 import random
+import discord
 from discord.ext import commands
 from discord import slash_command
 
@@ -16,7 +17,7 @@ class Webhook(commands.Cog):
     # If no webhook matching config hook name, create new webhook.
     # Returns webhook object
     @staticmethod
-    async def grab(ctx):
+    async def grab(ctx: discord.ApplicationContext):
         webhooks = await ctx.channel.webhooks()
         imgs = os.listdir("src/images/webhook")
         if not imgs:
@@ -40,12 +41,12 @@ class Webhook(commands.Cog):
         return webhook
 
     @commands.command(name="talk", enabled=False)
-    async def talk(self, ctx):
+    async def talk(self, ctx: discord.ApplicationContext):
         webhook = await self.grab(ctx)
         await webhook.send("Hello")
 
-    #@slash_command(guild_ids=[629814073877331989, 648977487744991233], name="talk")
-    async def slash_talk(self, ctx):
+    #@slash_command(name="talk")
+    async def slash_talk(self, ctx: discord.ApplicationContext):
         webhook = await self.grab(ctx)
         await webhook.respond("Hello")
 

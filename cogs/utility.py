@@ -5,6 +5,8 @@ from discord.commands import slash_command, Option, SlashCommandGroup
 from sqlalchemy.future import select
 from sqlalchemy import text
 
+from discord.ext import pages
+
 from src.postgres import database
 
 
@@ -21,12 +23,62 @@ class Utility(commands.Cog):
         "Unassign settings that are currently in effect."
     )
 
+    list = SlashCommandGroup(
+        "list",
+        "Commands to list data in pages."
+    )
+
+    voice = list.create_subgroup(
+        "voice",
+        "Commands related to listing voice data."
+    )
+
+    @slash_command(name="testpage")
+    async def test_page(self, ctx: discord.ApplicationContext):
+        paginator = pages.Paginator(pages=["hello", "world"])
+        await paginator.respond(ctx.interaction)
+
+    @voice.command(name="roles")
+    async def list_voice_roles(self, ctx: discord.ApplicationContext, page: int = 1):
+        page = page - 1
+        async with database.async_session() as session:
+            embeds = [discord.Embed(title="Currently Assigned Voice Roles")]
+            global_role_id = await database.get_voice_global_role(session, ctx.guild.id)
+            if global_role_id is not None:
+                global_role = ctx.guild.get_role(global_role_id)
+                embeds[0].add_field(name="The Server Global Role", value=global_role.mention, inline=False)
+            stmt = (
+                select(database.Roles.role_id, database.VoiceChannels.channel_id)
+                    .select_from(database.Roles)
+                    .join(database.Guilds, database.Guilds.guild_id == ctx.guild.id)
+                    .join(database.VoiceLocalRoles, database.VoiceLocalRoles.role == database.Roles.id)
+                    .join(database.VoiceChannels, database.VoiceChannels.id == database.VoiceLocalRoles.channel)
+                    .where(database.Roles.id == database.VoiceLocalRoles.role)
+            )
+            results = await session.execute(stmt)
+            results = results.all()
+            for local_voice in results:
+                if len(embeds[len(embeds) - 1].fields) >= 4:
+                    embeds.append(discord.Embed(title="Currently Assigned Voice Roles"))
+                role = ctx.guild.get_role(local_voice[0])
+                channel = ctx.guild.get_channel(local_voice[1])
+                embeds[len(embeds) - 1].add_field(name=channel.name, value=role.mention, inline=False)
+            paginator = pages.Paginator(pages=embeds)
+            if page > paginator.page_count:
+                page = paginator.page_count
+            elif page < 0:
+                page = 0
+            await paginator.respond(ctx.interaction)
+            # Not efficient
+            if page != 0:
+                await paginator.goto_page(page_number=page)
+
     @unassign.command(
         name="global",
         description="Removes set global role from being assigned to users."
     )
     @commands.has_permissions(manage_roles=True)
-    async def unassign_voice_global_role(self, ctx):
+    async def unassign_voice_global_role(self, ctx: discord.ApplicationContext):
         async with database.async_session() as session:
             voice_global_role_exist = await database.voice_global_role_exists(session, ctx.guild.id)
             if not voice_global_role_exist:
@@ -53,7 +105,7 @@ class Utility(commands.Cog):
     @commands.has_permissions(manage_roles=True)
     async def unassign_voice_local_role(
             self,
-            ctx,
+            ctx: discord.ApplicationContext,
             channel: Option(
                 discord.VoiceChannel,
                 description="Channel to remove the local role from."
@@ -85,7 +137,7 @@ class Utility(commands.Cog):
     @commands.has_permissions(manage_roles=True)
     async def assign_voice_global_role(
             self,
-            ctx,
+            ctx: discord.ApplicationContext,
             role: Option(
                 discord.Role,
                 description="The role to assign as the global voice role to the whole server."
@@ -113,10 +165,9 @@ class Utility(commands.Cog):
                     )
                 )
             elif voice_global_role_exist:
-                stmt = select(
-                    database.VoiceGlobalRoles
-                ).where(
-                    database.VoiceGlobalRoles.guild == guild_key
+                stmt = (
+                    select(database.VoiceGlobalRoles)
+                        .where(database.VoiceGlobalRoles.guild == guild_key)
                 )
                 results = await session.execute(stmt)
                 voice_global_roles = results.scalars().first()
@@ -134,7 +185,7 @@ class Utility(commands.Cog):
     @commands.has_permissions(manage_roles=True)
     async def assign_voice_local_role(
             self,
-            ctx,
+            ctx: discord.ApplicationContext,
             channel: Option(
                 discord.VoiceChannel,
                 description="The channel to assign the local voice role to."
@@ -171,10 +222,9 @@ class Utility(commands.Cog):
                     )
                 )
             elif voice_local_role_exist:
-                stmt = select(
-                    database.VoiceLocalRoles
-                ).where(
-                    database.VoiceLocalRoles.channel == voice_channel_key
+                stmt = (
+                    select(database.VoiceLocalRoles)
+                        .where(database.VoiceLocalRoles.channel == voice_channel_key)
                 )
                 results = await session.execute(stmt)
                 voice_local_roles = results.scalars().first()
@@ -191,7 +241,7 @@ class Utility(commands.Cog):
         name="ping",
         description="Displays the bot latency."
     )
-    async def slash_ping(self, ctx):
+    async def slash_ping(self, ctx: discord.ApplicationContext):
         lat = round(self.bot.latency * 1000)
         await ctx.respond("%sms" % lat)
 
@@ -200,7 +250,7 @@ class Utility(commands.Cog):
         name="uptime",
         description="Check how long the bot has been online for."
     )
-    async def slash_uptime(self, ctx):
+    async def slash_uptime(self, ctx: discord.ApplicationContext):
         uptime = datetime.datetime.utcnow() - self.bot.start_time
         days, rem = divmod(uptime.seconds, 86400)
         hours, rem = divmod(rem, 3600)

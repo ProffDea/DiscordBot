@@ -21,124 +21,114 @@ Base = declarative_base()
 
 
 async def get_guild_key(session: AsyncSession, guild_id: int):
-    stmt = select(Guilds.id).where(Guilds.guild_id == guild_id)
+    stmt = (
+        select(Guilds.id)
+            .where(Guilds.guild_id == guild_id)
+    )
     results = await session.execute(stmt)
-    results = results.scalars().first()
-    return results
+    return results.scalars().first()
 
 
 async def get_role_key(session: AsyncSession, role_id: int):
-    stmt = select(Roles.id).where(Roles.role_id == role_id)
+    stmt = (
+        select(Roles.id)
+            .where(Roles.role_id == role_id)
+    )
     results = await session.execute(stmt)
-    results = results.scalars().first()
-    return results
+    return results.scalars().first()
 
 
 async def get_voice_channel_key(session: AsyncSession, channel_id: int):
-    stmt = select(VoiceChannels.id).where(VoiceChannels.channel_id == channel_id)
+    stmt = (
+        select(VoiceChannels.id)
+            .where(VoiceChannels.channel_id == channel_id)
+    )
     results = await session.execute(stmt)
-    results = results.scalars().first()
-    return results
+    return results.scalars().first()
 
 
 async def get_voice_global_role(session: AsyncSession, guild_id: int):
-    stmt = select(
-        Roles.role_id
-    ).select_from(
-        VoiceGlobalRoles
-    ).join(
-        Guilds,
-        Guilds.guild_id == guild_id
-    ).join(
-        Roles.id,
-        Roles.id == VoiceGlobalRoles.role
-    ).where(
-        Guilds.id == VoiceGlobalRoles.guild
+    stmt = (
+        select(Roles.role_id)
+            .select_from(VoiceGlobalRoles)
+            .join(Guilds, Guilds.guild_id == guild_id)
+            .join(Roles.id, Roles.id == VoiceGlobalRoles.role)
+            .where(Guilds.id == VoiceGlobalRoles.guild)
     )
     results = await session.execute(stmt)
-    results = results.scalars().first()
-    return results
+    return results.scalars().first()
 
 
 async def get_voice_local_role(session: AsyncSession, channel_id: int):
-    stmt = select(
-        Roles.role_id
-    ).select_from(
-        VoiceLocalRoles
-    ).join(
-        VoiceChannels,
-        VoiceChannels.channel_id == channel_id
-    ).join(
-        Roles,
-        Roles.id == VoiceLocalRoles.role
-    ).where(
-        VoiceChannels.id == VoiceLocalRoles.channel
+    stmt = (
+        select(Roles.role_id)
+            .select_from(VoiceLocalRoles)
+            .join(VoiceChannels, VoiceChannels.channel_id == channel_id)
+            .join(Roles, Roles.id == VoiceLocalRoles.role)
+            .where(VoiceChannels.id == VoiceLocalRoles.channel)
     )
     results = await session.execute(stmt)
-    results = results.scalars().first()
-    return results
+    return results.scalars().first()
 
 
 async def guild_exists(session: AsyncSession, guild_id: int):
-    stmt = select(Guilds).where(Guilds.guild_id == guild_id)
+    stmt = (
+        select(Guilds)
+            .where(Guilds.guild_id == guild_id)
+    )
     stmt_exists = select(exists(stmt))
     results_exists = await session.execute(stmt_exists)
-    results_exists = results_exists.scalars().first()
-    if results_exists:
+    if results_exists.scalars().first():
         return True
     return False
 
 
 async def role_exists(session: AsyncSession, role_id: int):
-    stmt = select(Roles).where(Roles.role_id == role_id)
+    stmt = (
+        select(Roles)
+            .where(Roles.role_id == role_id)
+    )
     stmt_exists = select(exists(stmt))
     results_exists = await session.execute(stmt_exists)
-    results_exists = results_exists.scalars().first()
-    if results_exists:
+    if results_exists.scalars().first():
         return True
     return False
 
 
 async def voice_channel_exists(session: AsyncSession, channel_id: int):
-    stmt = select(VoiceChannels).where(VoiceChannels.channel_id == channel_id)
+    stmt = (
+        select(VoiceChannels)
+            .where(VoiceChannels.channel_id == channel_id)
+    )
     stmt_exists = select(exists(stmt))
     results_exists = await session.execute(stmt_exists)
-    results_exists = results_exists.scalars().first()
-    if results_exists:
+    if results_exists.scalars().first():
         return True
     return False
 
 
 async def voice_global_role_exists(session: AsyncSession, guild_id: int):
-    stmt = select(
-        VoiceGlobalRoles
-    ).join(
-        Guilds,
-        Guilds.guild_id == guild_id
-    ).where(
-        VoiceGlobalRoles.guild == Guilds.id
+    stmt = (
+        select(VoiceGlobalRoles)
+            .join(Guilds, Guilds.guild_id == guild_id)
+            .where(VoiceGlobalRoles.guild == Guilds.id)
     )
     stmt_exists = select(exists(stmt))
     results_exists = await session.execute(stmt_exists)
-    results_exists = results_exists.scalars().first()
-    if results_exists:
+    if results_exists.scalars().first():
         return True
     return False
 
 
 async def voice_local_role_exists(session: AsyncSession, channel_id: int):
-    stmt = select(
-        VoiceLocalRoles
-    ).join(
-        VoiceChannels,
-        VoiceChannels.channel_id == channel_id
-    ).where(
-        VoiceLocalRoles.channel == VoiceChannels.id
+    stmt = (
+        select(VoiceLocalRoles)
+            .join(VoiceChannels, VoiceChannels.channel_id == channel_id)
+            .where(VoiceLocalRoles.channel == VoiceChannels.id)
     )
     stmt_exists = select(exists(stmt))
     results_exists = await session.execute(stmt_exists)
-    results_exists = results_exists.scalars().first()
-    if results_exists:
+    if results_exists.scalars().first():
         return True
     return False
 

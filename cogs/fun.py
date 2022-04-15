@@ -1,3 +1,4 @@
+import discord
 from discord.ext import commands
 from discord.commands import slash_command, Option
 
@@ -11,7 +12,9 @@ class Fun(commands.Cog):
         description="Repeats the message you want the bot to say."
     )
     async def slash_say(
-            self, ctx, message: Option(
+            self,
+            ctx: discord.ApplicationContext,
+            message: Option(
                 str,
                 description="The contents the bot will repeat."
             )

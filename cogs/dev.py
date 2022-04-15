@@ -12,7 +12,7 @@ class Developer(commands.Cog):
 
     @commands.command(name="load")
     @commands.is_owner()
-    async def load(self, ctx, cog: str):
+    async def load(self, ctx: discord.ApplicationContext, cog: str):
         self.bot.load_extension("cogs.%s" % cog)
         logger = logging.getLogger("bot.Developer")
         logger.info("%s cog has been loaded" % cog)
@@ -20,7 +20,7 @@ class Developer(commands.Cog):
 
     @commands.command(name="unload")
     @commands.is_owner()
-    async def unload(self, ctx, cog: str):
+    async def unload(self, ctx: discord.ApplicationContext, cog: str):
         self.bot.unload_extension("cogs.%s" % cog)
         logger = logging.getLogger("bot.Developer")
         logger.info("%s cog has been unloaded" % cog)
@@ -28,7 +28,7 @@ class Developer(commands.Cog):
 
     @commands.command(name="reload")
     @commands.is_owner()
-    async def reload(self, ctx, cog: str):
+    async def reload(self, ctx: discord.ApplicationContext, cog: str):
         try:
             self.bot.unload_extension("cogs.%s" % cog)
         except discord.errors.ExtensionNotLoaded:
@@ -44,7 +44,9 @@ class Developer(commands.Cog):
     )
     @commands.is_owner()
     async def slash_load(
-        self, ctx, cog: Option(
+        self,
+        ctx: discord.ApplicationContext,
+        cog: Option(
             str,
             name="module",
             description="The modules that involve all of the bot's features.",
@@ -62,7 +64,9 @@ class Developer(commands.Cog):
     )
     @commands.is_owner()
     async def slash_unload(
-        self, ctx, cog: Option(
+        self,
+        ctx: discord.ApplicationContext,
+        cog: Option(
             str,
             name="module",
             description="The modules that involve all of the bot's features.",
@@ -80,7 +84,9 @@ class Developer(commands.Cog):
     )
     @commands.is_owner()
     async def slash_reload(
-        self, ctx, cog: Option(
+        self,
+        ctx: discord.ApplicationContext,
+        cog: Option(
             str,
             name="module",
             description="The modules that involve all of the bot's features.",
