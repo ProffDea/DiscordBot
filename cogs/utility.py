@@ -35,7 +35,6 @@ class Utility(commands.Cog):
     )
 
     @voice.command(
-        guild_ids=[648977487744991233],
         name="roles",
         description="List both global and local voice roles that have been set in the server."
     )
@@ -74,7 +73,6 @@ class Utility(commands.Cog):
                 await paginator.goto_page(page_number=page)
 
     @unassign.command(
-        guild_ids=[648977487744991233],
         name="global",
         description="Removes set global role from being assigned to users."
     )
@@ -100,7 +98,6 @@ class Utility(commands.Cog):
             await ctx.respond("Success. Global role has been unassigned from this server.")
 
     @unassign.command(
-        guild_ids=[648977487744991233],
         name="local",
         description="Removes set local role from voice channel from being assigned to users."
     )
@@ -133,7 +130,6 @@ class Utility(commands.Cog):
         await ctx.respond("Success. Local role has been unassigned from %s." % channel.mention)
 
     @assign.command(
-        guild_ids=[648977487744991233],
         name="global",
         description="One role per server. Users joining voice channels with no local role are given this role."
     )
@@ -183,7 +179,6 @@ class Utility(commands.Cog):
         )
 
     @assign.command(
-        guild_ids=[648977487744991233],
         name="local",
         description="One role per channel. Users joining specified voice channel are given this role."
     )
@@ -244,7 +239,6 @@ class Utility(commands.Cog):
         )
 
     @slash_command(
-        guild_ids=[648977487744991233],
         name="ping",
         description="Displays the bot latency."
     )
@@ -254,7 +248,6 @@ class Utility(commands.Cog):
 
     # Doesn't take into account of plurals or "and"
     @slash_command(
-        guild_ids=[648977487744991233],
         name="uptime",
         description="Check how long the bot has been online for."
     )
