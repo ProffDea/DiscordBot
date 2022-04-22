@@ -34,7 +34,7 @@ bot = commands.Bot(
     case_insensitive=True,
     intents=get_intents()
 )
-bot.version = "2.2.0"
+bot.version = "2.3.0"
 bot.owner_ids = config.get("BOT_OWNERS")
 bot.start_time = datetime.datetime.utcnow()
 
@@ -58,10 +58,13 @@ for file in modules:
                 bot.user.name, len(bot.guilds)
             )
         )
-        watching = discord.Activity(
-            type=discord.ActivityType.watching,
-            name=config.get("BOT_PRESENCE")
-        )
-        await bot.change_presence(activity=watching)
+        activity_type = config.get_activity_type()
+        activity_message = config.get("ACTIVITY_MESSAGE")
+        if activity_type and activity_message:
+            activity = discord.Activity(
+                type=activity_type,
+                name=activity_message
+            )
+            await bot.change_presence(activity=activity)
 
 bot.run(config.get("BOT_TOKEN"))

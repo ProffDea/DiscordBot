@@ -8,6 +8,7 @@ from sqlalchemy import text
 from discord.ext import pages
 
 from src.postgres import database
+from src import utils
 
 
 class Utility(commands.Cog):
@@ -33,7 +34,11 @@ class Utility(commands.Cog):
         "Commands related to listing voice data."
     )
 
-    @voice.command(name="roles")
+    @voice.command(
+        guild_ids=[648977487744991233],
+        name="roles",
+        description="List both global and local voice roles that have been set in the server."
+    )
     async def list_voice_roles(self, ctx: discord.ApplicationContext, page: int = 1):
         page = page - 1
         async with database.async_session() as session:
@@ -44,11 +49,11 @@ class Utility(commands.Cog):
                 embeds[0].add_field(name="The Server Global Role", value=global_role.mention, inline=False)
             stmt = (
                 select(database.Roles.role_id, database.VoiceChannels.channel_id)
-                    .select_from(database.Roles)
-                    .join(database.Guilds, database.Guilds.guild_id == ctx.guild.id)
-                    .join(database.VoiceLocalRoles, database.VoiceLocalRoles.role == database.Roles.id)
-                    .join(database.VoiceChannels, database.VoiceChannels.id == database.VoiceLocalRoles.channel)
-                    .where(database.Roles.id == database.VoiceLocalRoles.role)
+                .select_from(database.Roles)
+                .join(database.Guilds, database.Guilds.guild_id == ctx.guild.id)
+                .join(database.VoiceLocalRoles, database.VoiceLocalRoles.role == database.Roles.id)
+                .join(database.VoiceChannels, database.VoiceChannels.id == database.VoiceLocalRoles.channel)
+                .where(database.Roles.id == database.VoiceLocalRoles.role)
             )
             results = await session.execute(stmt)
             results = results.all()
@@ -69,6 +74,7 @@ class Utility(commands.Cog):
                 await paginator.goto_page(page_number=page)
 
     @unassign.command(
+        guild_ids=[648977487744991233],
         name="global",
         description="Removes set global role from being assigned to users."
     )
@@ -94,6 +100,7 @@ class Utility(commands.Cog):
             await ctx.respond("Success. Global role has been unassigned from this server.")
 
     @unassign.command(
+        guild_ids=[648977487744991233],
         name="local",
         description="Removes set local role from voice channel from being assigned to users."
     )
@@ -126,6 +133,7 @@ class Utility(commands.Cog):
         await ctx.respond("Success. Local role has been unassigned from %s." % channel.mention)
 
     @assign.command(
+        guild_ids=[648977487744991233],
         name="global",
         description="One role per server. Users joining voice channels with no local role are given this role."
     )
@@ -156,13 +164,14 @@ class Utility(commands.Cog):
             if not voice_global_role_exist:
                 session.add(
                     database.VoiceGlobalRoles(
-                        guild=guild_key, role=role_key
+                        guild=guild_key,
+                        role=role_key
                     )
                 )
             elif voice_global_role_exist:
                 stmt = (
                     select(database.VoiceGlobalRoles)
-                        .where(database.VoiceGlobalRoles.guild == guild_key)
+                    .where(database.VoiceGlobalRoles.guild == guild_key)
                 )
                 results = await session.execute(stmt)
                 voice_global_roles = results.scalars().first()
@@ -174,6 +183,7 @@ class Utility(commands.Cog):
         )
 
     @assign.command(
+        guild_ids=[648977487744991233],
         name="local",
         description="One role per channel. Users joining specified voice channel are given this role."
     )
@@ -213,13 +223,14 @@ class Utility(commands.Cog):
             if not voice_local_role_exist:
                 session.add(
                     database.VoiceLocalRoles(
-                        channel=voice_channel_key, role=role_key
+                        channel=voice_channel_key,
+                        role=role_key
                     )
                 )
             elif voice_local_role_exist:
                 stmt = (
                     select(database.VoiceLocalRoles)
-                        .where(database.VoiceLocalRoles.channel == voice_channel_key)
+                    .where(database.VoiceLocalRoles.channel == voice_channel_key)
                 )
                 results = await session.execute(stmt)
                 voice_local_roles = results.scalars().first()
@@ -233,6 +244,7 @@ class Utility(commands.Cog):
         )
 
     @slash_command(
+        guild_ids=[648977487744991233],
         name="ping",
         description="Displays the bot latency."
     )
@@ -242,20 +254,12 @@ class Utility(commands.Cog):
 
     # Doesn't take into account of plurals or "and"
     @slash_command(
+        guild_ids=[648977487744991233],
         name="uptime",
         description="Check how long the bot has been online for."
     )
     async def slash_uptime(self, ctx: discord.ApplicationContext):
-        uptime = datetime.datetime.utcnow() - self.bot.start_time
-        days, rem = divmod(uptime.seconds, 86400)
-        hours, rem = divmod(rem, 3600)
-        minutes, seconds = divmod(rem, 60)
-        if seconds < 1:
-            seconds = 1
-        locals_ = locals()
-        magnitudes_str = ("%s %s" % (int(locals_[magnitude]), magnitude)
-                          for magnitude in ("days", "hours", "minutes", "seconds") if locals_[magnitude])
-        eta_str = ", ".join(magnitudes_str)
+        eta_str = utils.hrf_time_diff(datetime.datetime.utcnow(), self.bot.start_time)
         await ctx.respond(eta_str)
 
 

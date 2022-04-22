@@ -1,10 +1,5 @@
 # Levels for logging outputs
-# CRITICAL
-# ERROR
-# WARNING
-# INFO
-# DEBUG
-# NOTSET
+# CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
 LOG_LVL: "INFO"
 LOG_TO_CONSOLE: True
 LOG_TO_FILE: True
@@ -13,8 +8,11 @@ LOG_TO_FILE: True
 BOT_TOKEN: ""
 DEFAULT_PREFIX: "!"
 BOT_DESCRIPTION: ""
-BOT_PRESENCE: ""
-BOT_OWNER: 
+# Activities
+# playing, streaming, listening, watching
+BOT_ACTIVITY: ""
+ACTIVITY_MESSAGE: ""
+BOT_OWNERS: []
 
 # Webhook Cog
 HOOK_NAME: ""
@@ -25,3 +23,8 @@ DB_PASSWORD: ""
 DB_IP: "127.0.0.1"
 DB_PORT: "5432"
 DB_NAME: ""
+
+# Lavalink Server
+LAVALINK_IP: "127.0.0.1"
+LAVALINK_PORT: 2333
+LAVALINK_PASSWORD: ""

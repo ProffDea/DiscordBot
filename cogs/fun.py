@@ -1,6 +1,11 @@
 import discord
+import datetime
 from discord.ext import commands
 from discord.commands import slash_command, Option
+from sqlalchemy.future import select
+
+from src import webhooks, utils
+from src.postgres import database
 
 
 class Fun(commands.Cog):
@@ -21,6 +26,49 @@ class Fun(commands.Cog):
     ):
         await ctx.respond("Success", ephemeral=True)
         await ctx.send(message)
+
+    # Does not support files yet
+    @slash_command(
+        name="snipe",
+        description="Show the most recent deleted/edited message in the current channel."
+    )
+    async def snipe(self, ctx: discord.ApplicationContext):
+        async with database.async_session() as session:
+            stmt = (
+                select(
+                    database.Users.user_id,
+                    database.Snipe.message,
+                    database.Snipe.created_at,
+                    database.Snipe.deleted_at,
+                    database.Snipe.is_edit
+                )
+                .select_from(database.Users)
+                .join(database.TextChannels, database.TextChannels.channel_id == ctx.channel.id)
+                .join(database.Snipe, database.Snipe.channel == database.TextChannels.id)
+                .where(database.Users.id == database.Snipe.user)
+                .order_by(database.Snipe.deleted_at.desc())
+            )
+            results = await session.execute(stmt)
+            results = results.all()
+            user_id, message, created_at, deleted_at, is_edit = results[0]
+            member = ctx.guild.get_member(user_id)
+            webhook = await webhooks.from_channel(session, self.bot, ctx.channel)
+            eta_str = utils.hrf_time_diff(
+                datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc),
+                created_at.replace(tzinfo=datetime.timezone.utc)
+            )
+            eta_str2 = utils.hrf_time_diff(
+                datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc),
+                deleted_at.replace(tzinfo=datetime.timezone.utc)
+            )
+            event = "edited" if is_edit else "deleted"
+            await webhook.send(
+                content=message,
+                username="%s : %s %s ago" % (
+                    member.name, event, eta_str2
+                ),
+                avatar_url=member.display_avatar)
+            await ctx.respond("Message was created %s ago" % eta_str, ephemeral=True)
 
 
 def setup(bot):
