@@ -6,6 +6,7 @@ from sqlalchemy.future import select
 
 from src import webhooks, utils
 from src.postgres import database
+from src.modules import snipe
 
 
 class Fun(commands.Cog):
@@ -13,6 +14,7 @@ class Fun(commands.Cog):
         self.bot = bot
 
     @slash_command(
+        guild_ids=[648977487744991233],
         name="say",
         description="Repeats the message you want the bot to say."
     )
@@ -29,6 +31,7 @@ class Fun(commands.Cog):
 
     # Does not support files yet
     @slash_command(
+        guild_ids=[648977487744991233],
         name="snipe",
         description="Show the most recent deleted/edited message in the current channel."
     )
@@ -65,17 +68,17 @@ class Fun(commands.Cog):
                 datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc),
                 deleted_at.replace(tzinfo=datetime.timezone.utc)
             )
-            event = "edited" if is_edit else "deleted"
+            event_edit = "edited" if is_edit else "deleted"
             if file_urls:
                 for url in file_urls:
                     message += "\n%s" % url
             await ctx.delete()
             await webhook.send(
                 content=message,
-                username="%s : %s %s ago" % (
-                    member.display_name, event, deleted_time
-                ),
-                avatar_url=member.display_avatar)
+                username=member.display_name,
+                avatar_url=member.display_avatar,
+                view=snipe.Info(member, created_time, deleted_time, event_edit)
+            )
             #await ctx.respond("Message was created %s ago" % created_time, ephemeral=True)
 
 

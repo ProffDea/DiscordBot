@@ -6,6 +6,26 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.postgres import database
 
 
+class Info(discord.ui.View):
+    def __init__(self, member: discord.Member, created_time: str, deleted_time: str, event_edit: str):
+        super().__init__()
+        self.member = member
+        self.created_time = created_time
+        self.deleted_time = deleted_time
+        self.event_edit = event_edit
+
+    @discord.ui.button(emoji="⚙", style=discord.ButtonStyle.blurple)
+    async def details(self, button: discord.ui.Button, interaction: discord.Interaction):
+        embed = discord.Embed(
+            title="%s message" % self.event_edit.title(),
+            description="Message Author: %s\nAuthor ID: %s\nCreated %s ago\n%s %s ago\n" % (
+                self.member.mention, self.member.id, self.created_time, self.event_edit.title(), self.deleted_time
+            )
+        )
+        embed.set_thumbnail(url=self.member.display_avatar.url)
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+
 async def store(session: AsyncSession, message: discord.Message, is_edit: bool):
     if message.author.bot:
         return

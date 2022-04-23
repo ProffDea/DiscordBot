@@ -34,7 +34,7 @@ bot = commands.Bot(
     case_insensitive=True,
     intents=get_intents()
 )
-bot.version = "2.3.1"
+bot.version = "2.3.2"
 bot.owner_ids = config.get("BOT_OWNERS")
 bot.start_time = datetime.datetime.utcnow()
 
