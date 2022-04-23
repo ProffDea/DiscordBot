@@ -14,7 +14,6 @@ class Fun(commands.Cog):
         self.bot = bot
 
     @slash_command(
-        guild_ids=[648977487744991233],
         name="say",
         description="Repeats the message you want the bot to say."
     )
@@ -31,7 +30,6 @@ class Fun(commands.Cog):
 
     # Does not support files yet
     @slash_command(
-        guild_ids=[648977487744991233],
         name="snipe",
         description="Show the most recent deleted/edited message in the current channel."
     )
