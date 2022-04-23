@@ -2,7 +2,7 @@ import discord
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, BIGINT, ForeignKey, exists, DateTime, Text, Boolean
+from sqlalchemy import Column, BIGINT, ForeignKey, exists, DateTime, Text, Boolean, ARRAY
 from sqlalchemy.future import select
 
 from src import config
@@ -116,6 +116,19 @@ async def guild_exists(session: AsyncSession, guild_id: int):
     stmt = (
         select(Guilds)
         .where(Guilds.guild_id == guild_id)
+    )
+    stmt_exists = select(exists(stmt))
+    results_exists = await session.execute(stmt_exists)
+    if results_exists.scalars().first():
+        return True
+    return False
+
+
+async def snipe_exists(session: AsyncSession, channel_id: int):
+    stmt = (
+        select(Snipe)
+        .join(TextChannels, TextChannels.channel_id == channel_id)
+        .where(Snipe.channel == TextChannels.id)
     )
     stmt_exists = select(exists(stmt))
     results_exists = await session.execute(stmt_exists)
@@ -364,8 +377,9 @@ class Snipe(Base):
     )
     created_at = Column(DateTime, name="created_at", unique=True, nullable=False)
     deleted_at = Column(DateTime, name="deleted_at", unique=True, nullable=False)
-    message = Column(Text, name="message", unique=False, nullable=False)
+    message = Column(Text, name="message", unique=False, nullable=True)
     is_edit = Column(Boolean, name="is_edit", unique=False, nullable=False)
+    file_urls = Column(ARRAY(Text), name="file_urls", unique=False, nullable=True)
 
 
 class VoiceGlobalRoles(Base):

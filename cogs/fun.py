@@ -34,13 +34,17 @@ class Fun(commands.Cog):
     )
     async def snipe(self, ctx: discord.ApplicationContext):
         async with database.async_session() as session:
+            snipe_exist = await database.snipe_exists(session, ctx.channel.id)
+            if not snipe_exist:
+                return await ctx.respond("There is nothing to snipe yet!", ephemeral=True)
             stmt = (
                 select(
                     database.Users.user_id,
-                    database.Snipe.message,
                     database.Snipe.created_at,
                     database.Snipe.deleted_at,
-                    database.Snipe.is_edit
+                    database.Snipe.message,
+                    database.Snipe.is_edit,
+                    database.Snipe.file_urls
                 )
                 .select_from(database.Users)
                 .join(database.TextChannels, database.TextChannels.channel_id == ctx.channel.id)
@@ -50,25 +54,29 @@ class Fun(commands.Cog):
             )
             results = await session.execute(stmt)
             results = results.all()
-            user_id, message, created_at, deleted_at, is_edit = results[0]
+            user_id, created_at, deleted_at, message, is_edit, file_urls = results[0]
             member = ctx.guild.get_member(user_id)
             webhook = await webhooks.from_channel(session, self.bot, ctx.channel)
-            eta_str = utils.hrf_time_diff(
+            created_time = utils.hrf_time_diff(
                 datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc),
                 created_at.replace(tzinfo=datetime.timezone.utc)
             )
-            eta_str2 = utils.hrf_time_diff(
+            deleted_time = utils.hrf_time_diff(
                 datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc),
                 deleted_at.replace(tzinfo=datetime.timezone.utc)
             )
             event = "edited" if is_edit else "deleted"
+            if file_urls:
+                for url in file_urls:
+                    message += "\n%s" % url
+            await ctx.delete()
             await webhook.send(
                 content=message,
                 username="%s : %s %s ago" % (
-                    member.name, event, eta_str2
+                    member.display_name, event, deleted_time
                 ),
                 avatar_url=member.display_avatar)
-            await ctx.respond("Message was created %s ago" % eta_str, ephemeral=True)
+            #await ctx.respond("Message was created %s ago" % created_time, ephemeral=True)
 
 
 def setup(bot):
